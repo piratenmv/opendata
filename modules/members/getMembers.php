@@ -80,6 +80,7 @@ if ($DIVISION == "Bund") {
     $mitglieder = trim($mitglieder[0]);
     $mitglieder = str_replace(".", "", $mitglieder);
     $stimmberechtigt = trim($stimmberechtigt[1]);
+    $stimmberechtigt = str_replace(".", "", $stimmberechtigt);
     $einwohner = trim(str_replace(",", ".", $einwohner[0])) * 1000000; // replace "1,6" by 1600000 
     $mitgliederjeeinwohner = trim($mitgliederjeeinwohner[0]);
     $flaeche = trim($flaeche[0]) * 1000; // replace "23.180" by 23180
