@@ -24,7 +24,21 @@ Die OpenData-Schnittstelle kann mit
 
     rest/rest.js
 
-gestartet werden. Für weitere Installationshinweise bitte `rest/README.md` lesen.
+gestartet werden. Anschließend stehen die Datenquellen aus dem Ordner `modules` zur Verfügung. Beispielsweise kann unter der URL http://localhost:3333/members/mv die Mitgliederzahlen des Landesverbandes Mecklenburg-Vorpommern angezeigt werden:
+
+    $ curl http://localhost:3333/members/mv
+    
+    {
+        "mitglieder": 467,
+        "stimmberechtigt": 256,
+        "einwohner": 1600000,
+        "mitglieder_je_einwohner": 285,
+        "flaeche": 23180,
+        "mitglieder_je_flaeche": 20,
+        "stand": "14.06.2012"
+    }
+
+Für weitere Installationshinweise bitte `rest/README.md` lesen. Eine Übersicht über die existierenden Datenquellen gibt es in `modules/README.md`.
 
 
 Fragen
