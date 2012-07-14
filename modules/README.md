@@ -12,6 +12,7 @@ Module
 
 - `lqfb`: Scripte, um Informationen aus Liquid Feedback auszugeben
 - `members`: Script um die Mitgliederzahlen auszugeben
+- `pads`: Scripte um Piratenpads von http://www.piratenpad.de anzuzeigen
 
 
 Einbinden in den Webserver

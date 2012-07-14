@@ -27,7 +27,7 @@ unset($argv[0]);
 $request = implode(" ", $argv) . "\n";
 
 // cache file uses MD5 hash of request
-$cachefile = '/Users/niels/Documents/8Piraten/github/opendata/cache/' . md5($request) . '.json';
+$cachefile = dirname( __FILE__ ) . '/../cache/' . md5($request) . '.json';
 
 // we cache for 15 minutes
 $cachetime = 15 * 60;
