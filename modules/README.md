@@ -10,6 +10,7 @@ Aufbau
 ------
 
 - `lqfb`: Scripte, um Informationen aus Liquid Feedback auszugeben
+- `members`: Script um die Mitgliederzahlen auszugeben
 
 Fragen
 ------
