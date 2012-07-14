@@ -13,9 +13,19 @@ Aufbau
 
 Letztendlich werden die Daten über eine REST-API im JSON-Format ausgegeben. Dazu nutzen wir Node.js (http://nodejs.org) mit dem Express Framework (http://expressjs.com).
 
-Bisher veröffentlicht:
+- `cache` wird benutzt, um Anfragen 15 Minuten lang zwischenzuspeichern. Der Inhalt des Ordners kann jederzeit gefahrlos gelöscht werden. Ob ein Cache benutzt werden soll, kann in der Datei `rest/rest.nodejs` eingestellt werden. Die Dauer kann in der Datei `rest/cache.php` eingestellt werden.
+- `modules` enthält die Scripte, die vom Webserver mit entsprechenden Parametern ausgeführt werden. Sie stellen die Daten zusammen und geben sie im JSON-Format zurück.
+- `rest` enthält den eigentlichen Web-Server, der die Ergebnisse der Script ausliefert.
 
-- Der Ordner `modules` enthält die Scripte, die vom Webserver mit entsprechenden Parametern ausgeführt werden. Sie stellen die Daten zusammen und geben sie im JSON-Format zurück.
+Start
+-----
+
+Die OpenData-Schnittstelle kann mit
+
+    rest/rest.js
+
+gestartet werden. Für weitere Installationshinweise bitte `rest/README.md` lesen.
+
 
 Fragen
 ------
