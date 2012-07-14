@@ -25,9 +25,9 @@ Anpassen
 
 Um eine neue Datenquelle einzubinden, muss wie folgt vorgegangen werden:
 
-1. Script in ein neues Unterverzeichnis von `modules` legen, z.B. `modules/foo/getFoo.py`.
+Script in ein neues Unterverzeichnis von `modules` legen, z.B. `modules/foo/getFoo.py`.
 
-2. Eine Datei für den Webserver anlegen, z.B. `modules/foo.js`. **Achtung:** Die Datei muss die Endung `.js` haben, sonst wird sie vom Webserver nicht eingebunden. In der Datei wird der Webserver `app` angepasst. Ein Beispiel sieht wie folgt aus:
+Eine Datei für den Webserver anlegen, z.B. `modules/foo.js`. **Achtung:** Die Datei muss die Endung `.js` haben, sonst wird sie vom Webserver nicht eingebunden. In der Datei wird der Webserver `app` angepasst. Ein Beispiel sieht wie folgt aus:
 
     app.get('/foo/:id', function(req, res) {
       var options = [req.params.id];
@@ -35,7 +35,9 @@ Um eine neue Datenquelle einzubinden, muss wie folgt vorgegangen werden:
       care(tool, options, req, res);
     });
 
-3. Webserver neu starten.
+Dabei legt die erste Zeile fest, dass wir unser Script unter dem Pfad `/foo/` anbieten und einen Parameter `id` verlangen. Insgesamt wäre eine vollständige ULR beispielsweise `http://localhost:3333/foo/42`. In der zweite Zeile übernehmen wir die Parameter aus der ersten Zeile in ein Array `options`. In der dritten Zeile wird das Tool angegeben. In der vierten Zeile wird schließlich das Tool mit den Optionen mittels der Funktion `care` aufgerufen. Diese Zeile sollte nie geändert werden müssen.
+
+Anschließend muss Webserver neu gestartet werden. Beim Start werden automatisch alle Dateien in diesem Verzeichnis mit der Endung `.js` eingelesen.
 
 
 Fragen
