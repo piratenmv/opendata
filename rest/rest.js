@@ -53,11 +53,22 @@ Array.prototype.clean = function(deleteValue) {
 
 /////////////////////////////////////////////////////////////////////////////
 
+
 // execute a tool
 function care(tool, options, req, res, page) {
     if (page == null) {
         page = false;
     }
+    
+    // set JSON as default format
+    if (typeof options[0] === "undefined") {
+        format = "json";
+    } else {
+        format = options[0];
+    }
+
+    // the file format should not be used as option any more (yet)
+    options.shift();
 
     // prefix with modules directory
     tool = module_dir + '/' + tool;
@@ -72,7 +83,11 @@ function care(tool, options, req, res, page) {
     // depending on the cache, call tool directly or via 'cache.php'
     if (cache) {
         // cached call
+
+        // move tool name and format to the parameters
         options.unshift(tool);
+        options.unshift(format);
+
         var child = spawn(__dirname + "/cache.php", options);
         console.log('  + Tool "' + options.join(" ") + '" spawned (PID ' + child.pid + ').');
     } else {
@@ -83,7 +98,12 @@ function care(tool, options, req, res, page) {
 
     // write a header if we don't server pages
     if (!page) {
-        res.writeHead(200, {'Content-Type': 'text/plain'});
+        switch(format) {
+            case 'json': res.writeHead(200, {'Content-Type': 'application/json'}); break;
+            case 'xml':  res.writeHead(200, {'Content-Type': 'text/xml'}); break;
+        }
+    } else {
+        res.writeHead(200, {'Content-Type': 'text/html'});
     }
 
     // redirect stdout to output
