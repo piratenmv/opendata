@@ -27,6 +27,7 @@ Es werden diese Programme benötigt:
 
 - Node.js (http://nodejs.org) 
 - Express (http://expressjs.com)
+- Data2XML (https://github.com/appsattic/node-data2xml) mit lokalem Fix
 
 Unter Ubuntu lassen sich diese Tools leicht mit
 

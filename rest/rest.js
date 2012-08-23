@@ -55,16 +55,29 @@ Array.prototype.clean = function(deleteValue) {
 
 
 // execute a tool
-function care(tool, options, req, res, page) {
+function care(tool, options, req, res, page, listname, elemname, output) {
     if (page == null) {
         page = false;
     }
     
     // set JSON as default format
     if (typeof options[0] === "undefined") {
-        format = "json";
+        if (req.accepts("application/json")) {
+            format = "json"
+        } else if (req.accepts("application/xml")) {
+            format = "xml";
+        } else {
+            res.writeHead(406);
+            res.end();
+            return;
+        }
     } else {
         format = options[0];
+        if (format != "json" && format != "xml") {
+            res.writeHead(406);
+            res.end();
+            return;            
+        }
     }
 
     // the file format should not be used as option any more (yet)
@@ -80,14 +93,13 @@ function care(tool, options, req, res, page) {
     // call the tool by spawing a child
     options.clean(undefined);
 
+    var responsedata = "";
+    
     // depending on the cache, call tool directly or via 'cache.php'
     if (cache) {
         // cached call
-
         // move tool name and format to the parameters
         options.unshift(tool);
-        options.unshift(format);
-
         var child = spawn(__dirname + "/cache.php", options);
         console.log('  + Tool "' + options.join(" ") + '" spawned (PID ' + child.pid + ').');
     } else {
@@ -96,34 +108,71 @@ function care(tool, options, req, res, page) {
         console.log('  + Tool "' + tool + ' ' + options.join(" ") + '" spawned (PID ' + child.pid + ').');
     }
 
-    // write a header if we don't server pages
-    if (!page) {
-        switch(format) {
-            case 'json': res.writeHead(200, {'Content-Type': 'application/json'}); break;
-            case 'xml':  res.writeHead(200, {'Content-Type': 'text/xml'}); break;
-        }
-    } else {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-    }
-
     // redirect stdout to output
     child.stdout.on('data', function(data) {
-        res.write(data);
+        responsedata += data;
     });
 
     // redirect stderr to console
     child.stderr.on('data', function(data) {
-        console.error("[stderr] " + data);
+       console.error("[stderr] " + data);
     });
 
     // close connection once the tool terminates
     child.on('exit', function(code) {
         console.log('  - Tool "' + tool + '" terminated with exit code ' + code + '.');
+        // build response
+        if (code != 0) {
+            // internal error
+            res.writeHead(500);
+        } else {
+            if (output) {
+                // enhance output if function exists
+                responsedata = output(responsedata);
+            } else {
+                responsedata = JSON.parse(responsedata);
+            }
+            // write a header if we don't server pages
+            if (!page) {
+                switch(format) {
+                case 'json': 
+                    res.writeHead(200, {'Content-Type': 'application/json'}); 
+                    responsedata = JSON.stringify(responsedata);
+                    break;
+                case 'xml':  
+                    res.writeHead(200, {'Content-Type': 'application/xml'});
+                    if (!elemname) {
+                        elemname = "root";
+                    }
+                    if (listname) {
+                        responsedata = listtoxml(listname, elemname, responsedata);
+                    } else {
+                        responsedata = toxml(elemname, responsedata);
+                    }
+                    break;
+                }
+            } else {
+                res.writeHead(200, {'Content-Type': 'text/html'});
+            }
+            res.write(responsedata);
+        }
         console.log('- Client ' + req['client']['remoteAddress'] + ' disconnected.');
         res.end();
     });
 }
 
+
+function toxml(elemname, data) {
+    // TODO nicer solution for links: use href as attribute
+    return require('data2xml')(elemname, data);
+}
+
+function listtoxml(listname, elemname, data) {
+    // TODO nicer solution for links: use href as attribute
+    var object = new Object;
+    object[elemname] = data;
+    return require('data2xml')(listname, object);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
