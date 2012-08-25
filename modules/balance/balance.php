@@ -45,6 +45,7 @@ echo <<<EOT
     "tagesgeld": $tagesgeld,
     "datum": "$datum"
 }
+
 EOT;
 
 ?>
