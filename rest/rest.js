@@ -36,8 +36,29 @@ var app = require('express')();
 // TOOL EXECUTION
 /////////////////////////////////////////////////////////////////////////////
 
-function error(code, req, res) {
-    res.writeHead(code);
+function error(code, req, res, message, outputInfo) {
+    if (message) {
+        if (outputInfo) {
+            switch(outputInfo.format) {
+                case 'xml':
+                    res.setHeader('Content-Type', 'application/xml');
+                    message = toxml('error', JSON.parse(message).error.message);
+                    break;
+                case 'json':
+                    res.setHeader('Content-Type', 'application/json');
+                    break;
+                default:
+                    // unknown format
+                    break;
+            }
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+        }
+        res.writeHead(code);
+        res.write(message);
+    } else {
+        res.writeHead(code);
+    }
     res.end();
     console.log('- Client ' + req['client']['remoteAddress'] + ' disconnected - code ' + code + '.');
 }
@@ -55,17 +76,17 @@ function care(tool, options, req, res, outputInfo) {
     // if no format is given, check if JSON or XML is accepted
     if (typeof options[0] === "undefined") {
         if (req.accepts("application/json")) {
-            format = "json"
+            outputInfo.format = "json"
         } else if (req.accepts("application/xml")) {
-            format = "xml";
+            outputInfo.format = "xml";
         } else {
             // we could not agree on a format - send 406 Not acceptable
             error(406, req, res);
             return;
         }
     } else {
-        format = options[0];
-        if (format != "json" && format != "xml") {
+        outputInfo.format = options[0];
+        if (outputInfo.format != "json" && outputInfo.format != "xml") {
             // the given format is not implemented - send 406 Not acceptable
             error(406, req, res);
             return;
@@ -137,7 +158,12 @@ function callModule(tool, options, req, res, outputInfo, cb) {
 
             case 1:
                 // tool reported an error - send 404 Not Found
-                error(404, req, res);
+                if (responsedata.length > 0) {
+                    // we have a message
+                    error(404, req, res, responsedata, outputInfo);
+                } else {
+                    error(404, req, res);
+                }
                 break;
 
             default:
@@ -167,7 +193,7 @@ function buildResponse(req, res, outputInfo, responsedata) {
 
     // write a header if we don't server pages
     if (outputInfo.page == null) {
-        switch(format) {
+        switch(outputInfo.format) {
         case 'json': 
             res.writeHead(200, {'Content-Type': 'application/json'});
             responsedata = tojson(responsedata);
@@ -260,6 +286,16 @@ process.on('uncaughtException', function (err) {
 // load all modules and start the server
 function init() {
     var fs = require('fs');
+
+    // delete cache
+    cache_dir = require('path').normalize(__dirname + '/cache');
+    if (fs.existsSync(cache_dir)) {
+        fs.readdir(cache_dir, function(err, files) {
+            for (var i=0; i<files.length; i++) {
+                fs.unlink(cache_dir + '/' + files[i]);
+            }
+        });
+    }
 
     // load all modules in the module_dir and start the server
     fs.readdir(module_dir, function(err, files) {
