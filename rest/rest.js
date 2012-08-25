@@ -39,18 +39,7 @@ var app = require('express')();
 function error(code, req, res, message, outputInfo) {
     if (message) {
         if (outputInfo) {
-            switch(outputInfo.format) {
-                case 'xml':
-                    res.setHeader('Content-Type', 'application/xml');
-                    message = toxml('error', JSON.parse(message).error.message);
-                    break;
-                case 'json':
-                    res.setHeader('Content-Type', 'application/json');
-                    break;
-                default:
-                    // unknown format
-                    break;
-            }
+            message = dataToOutputFormat(req, res, outputInfo, JSON.parse(message));
         } else {
             res.setHeader('Content-Type', 'application/json');
         }
@@ -193,30 +182,37 @@ function buildResponse(req, res, outputInfo, responsedata) {
 
     // write a header if we don't server pages
     if (outputInfo.page == null) {
-        switch(outputInfo.format) {
-        case 'json': 
-            res.writeHead(200, {'Content-Type': 'application/json'});
-            responsedata = tojson(responsedata);
-            break;
-        case 'xml':  
-            res.writeHead(200, {'Content-Type': 'application/xml'});
-            if (!outputInfo.elemname) {
-                outputInfo.elemname = "root";
-            }
-            if (outputInfo.listname) {
-                responsedata = listtoxml(outputInfo.listname, outputInfo.elemname, responsedata);
-            } else {
-                responsedata = toxml(outputInfo.elemname, responsedata);
-            }
-            break;
-        }
+        responsedata = dataToOutputFormat(req, res, outputInfo, responsedata);
     } else {
-        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.setHeader('Content-Type', 'text/html')
     }
+    res.writeHead(200);
 
     res.write(responsedata);
     res.end();
     console.log('- Client ' + req['client']['remoteAddress'] + ' disconnected.');
+}
+
+function dataToOutputFormat(req, res, outputInfo, responsedata) {
+    switch(outputInfo.format) {
+        case 'json': 
+            res.setHeader('Content-Type', 'application/json');
+            return tojson(responsedata);
+        case 'xml':  
+            res.setHeader('Content-Type', 'application/xml');
+            if (!outputInfo.elemname) {
+                outputInfo.elemname = "root";
+            }
+            if (outputInfo.listname) {
+                return listtoxml(outputInfo.listname, outputInfo.elemname, responsedata);
+            } else {
+                return  toxml(outputInfo.elemname, responsedata);
+            }
+        default:
+            // unknown format
+            console.log("Unkown format: " + outputInfo.format);
+            return null;
+    }
 }
 
 
@@ -295,7 +291,7 @@ function init() {
                 fs.unlink(cache_dir + '/' + files[i]);
             }
         });
-    }
+    }    
 
     // load all modules in the module_dir and start the server
     fs.readdir(module_dir, function(err, files) {
