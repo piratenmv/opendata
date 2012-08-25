@@ -5,7 +5,7 @@
 #   Lists the information on a Twitter user.
 #
 # Usage:
-#   getUser.php USERNAME
+#   getUser.py USERNAME
 #
 #   USERNAME: A twitter username
 #
