@@ -46,8 +46,30 @@ $subdivision = array(
 );
 
 # process command line
-if ($argc != 2) die("Exactly one parameter must be given!\n");
-if (!array_key_exists($argv[1], $subdivision)) die ("Parameter does not name a subdivision!\n");
+if ($argc != 2) {
+    echo <<<EOT
+{
+  "error": {
+    "message": "exactly one parameter must be given"
+  }
+}
+
+EOT;
+    exit(1);
+}
+
+if (!array_key_exists($argv[1], $subdivision)) {
+    echo <<<EOT
+{
+  "error": {
+    "message": "unknown subdivision"
+  }
+}
+
+EOT;
+    exit(1);
+}
+
 $DIVISION = $subdivision[$argv[1]];
 
 # load the wiki page containing the member data
@@ -137,7 +159,6 @@ echo <<<EOT
     "mitglieder_je_flaeche": $mitgliederjeflaeche,
     "stand": $stand
 }
-
 EOT;
 
 ?>

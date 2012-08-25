@@ -44,8 +44,12 @@ function error(code, req, res) {
 
 // entry point for the modules
 // TODO move parameters to object
-function care(tool, options, req, res, page, listname, elemname, output) {
+// parameter outputInfo contains: page, listname, elemname, output
+function care(tool, options, req, res, outputInfo) {
     console.log('+ Client ' + req['client']['remoteAddress'] + ' connected.');
+    if(!outputInfo) {
+        outputInfo = new Object();
+    }
 
     // decide on output format
     // if no format is given, check if JSON or XML is accepted
@@ -79,22 +83,34 @@ function care(tool, options, req, res, page, listname, elemname, output) {
                 // something went wrong: send 500 Internal Server Error
                 error(500, req, res);
             } else {
-                if (data) {
-                    console.log("cache hit for: " + key);
-                    buildResponse(req, res, page, listname, elemname, output, data);
-                } else {
-                    console.log("cache miss for: " + key);
-                    callModule(tool, options, req, res, page, listname, elemname, output);
-                }
+                handleCacheResult(tool, options, req, res, outputInfo, data, key);
             }
         });
     } else {
-        callModule(tool, options, req, res, page, listname, elemname, output);
+        callModule(tool, options, req, res, outputInfo, handleToolResult);
     }
 }
 
+function handleCacheResult(tool, options, req, res, outputInfo, data, key) {
+    if (data) {
+        console.log("cache hit for: " + key);
+        buildResponse(req, res, outputInfo, data);
+    } else {
+        console.log("cache miss for: " + key);
+        callModule(tool, options, req, res,outputInfo, handleToolResult);
+    }
+}
+
+function handleToolResult(tool, options, req, res, outputInfo, responsedata) {
+    if (cache) {
+        cacheResponse(getCacheKey(tool, options), responsedata);
+    }
+    buildResponse(req, res, outputInfo, responsedata);
+}
+
 // actually call the tool
-function callModule(tool, options, req, res, page, listname, elemname, output) {
+// parameter outputInfo contains: page, listname, elemname, output
+function callModule(tool, options, req, res, outputInfo, cb) {
     var responsedata = "";
 
     // call module - prefix with modules directory
@@ -108,30 +124,37 @@ function callModule(tool, options, req, res, page, listname, elemname, output) {
 
     // redirect stderr to console
     child.stderr.on('data', function(data) {
-        console.error("[stderr] " + data);
+        //console.error("[stderr] " + data);
     });
 
     // close connection once the tool terminates
     child.on('exit', function(code) {
         console.log('  - Tool "' + tool + '" terminated with exit code ' + code + '.');
-        if (code != 0) {
-            // internal error
-            error(500, req, res);
-        } else {
-            if (cache) {
-                cacheResponse(getCacheKey(tool, options), responsedata);
-            }
-            buildResponse(req, res, page, listname, elemname, output, responsedata);
+        switch(code) {
+            case 0:
+                cb(tool, options, req, res, outputInfo, responsedata);
+                break;
+
+            case 1:
+                // tool reported an error - send 404 Not Found
+                error(404, req, res);
+                break;
+
+            default:
+                // other error - send 500 Internal Server Error
+                error(500, req, res);
+                break;
         }
     });
 }
 
 // return response to client
-function buildResponse(req, res, page, listname, elemname, output, responsedata) {
+// parameter outputInfo contains: page, listname, elemname, output
+function buildResponse(req, res, outputInfo, responsedata) {
     // build response
-    if (output) {
+    if (outputInfo.output) {
         // enhance output if function exists
-        responsedata = output(responsedata);
+        responsedata = outputInfo.output(responsedata);
         if (!responsedata) {
             // which error in which case?
             error(404, req, res);
@@ -143,7 +166,7 @@ function buildResponse(req, res, page, listname, elemname, output, responsedata)
     }
 
     // write a header if we don't server pages
-    if (page == null) {
+    if (outputInfo.page == null) {
         switch(format) {
         case 'json': 
             res.writeHead(200, {'Content-Type': 'application/json'});
@@ -151,13 +174,13 @@ function buildResponse(req, res, page, listname, elemname, output, responsedata)
             break;
         case 'xml':  
             res.writeHead(200, {'Content-Type': 'application/xml'});
-            if (!elemname) {
-                elemname = "root";
+            if (!outputInfo.elemname) {
+                outputInfo.elemname = "root";
             }
-            if (listname) {
-                responsedata = listtoxml(listname, elemname, responsedata);
+            if (outputInfo.listname) {
+                responsedata = listtoxml(outputInfo.listname, outputInfo.elemname, responsedata);
             } else {
-                responsedata = toxml(elemname, responsedata);
+                responsedata = toxml(outputInfo.elemname, responsedata);
             }
             break;
         }
