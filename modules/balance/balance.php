@@ -36,11 +36,13 @@ $boldtext = $html->find('div[class=content clear-block] p strong text');
 // collect data
 $datum = $boldtext[0];
 $kontostand = (float)str_replace(",", ".", str_replace(".", "", $boldtext[1]));
+$tagesgeld = (float)str_replace(",", ".", str_replace(".", "", $boldtext[2]));
 
 // output JSON
 echo <<<EOT
 {
     "kontostand": $kontostand,
+    "tagesgeld": $tagesgeld,
     "datum": "$datum"
 }
 EOT;
