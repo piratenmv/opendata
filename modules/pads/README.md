@@ -25,8 +25,8 @@ Um die Scripte zu nutzen, müssen Account-Datein (Gruppenname, Nutzername und Pa
 Die Scripte benötigen den mitgelieferten PHP Simple HTML
 DOM Parser (http://sourceforge.net/projects/simplehtmldom/). Der PHP Simple HTML DOM Parser is unter der MIT-Lizenz (http://opensource.org/licenses/MIT) herausgegeben.
 
-Anpassung an andere LQFB-Instanzen
-----------------------------------
+Anpassung an andere Pad-Instanzen
+---------------------------------
 
 Momentan sind die Skripte auf sämtliche unter http://www.piratenpad.de gehosteten Pad-Gruppen eingerichtet. Eine Anpassung auf einen anderen Server sollte möglich sein, wurde aber hier nicht angestrebt.
 
